@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from rest_framework.views import APIView
 import random
+from ippanel import Client
 
 
 class ValidatePhoneSendOTP(APIView):
@@ -165,14 +166,23 @@ def send_otp(phone):
     This is an helper function to send otp to session stored phones or 
     passed phone number as argument.
     """
-
+    # you api key that generated from panel
+    api_key = "artJcX_XowCxqB8mcWbjMJcTuBRRnuRn5yvhUxVlN8E="
     if phone:
         key= random.randint(999,9999)
+        sms = Client(api_key)
+        credit = sms.get_credit()
+        bulk_id = sms.send(
+            "+9810001",          # originator
+            [str(phone)],    # recipients
+            str(key) # message
+        )
         return key
     else:
         return False
 
 def send_otp_forgot(phone):
+    api_key = "artJcX_XowCxqB8mcWbjMJcTuBRRnuRn5yvhUxVlN8E="
     if phone:
         key = random.randint(999,9999)
         phone = str(phone)
@@ -182,6 +192,13 @@ def send_otp_forgot(phone):
             name = user.name
         else:
             name = phone
+        sms = Client(api_key)
+        credit = sms.get_credit()
+        bulk_id = sms.send(
+            "+9810001",          # originator
+            [phone],    # recipients
+            otp_key # message
+        )    
 
         return otp_key
     else:
