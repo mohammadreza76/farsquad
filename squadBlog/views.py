@@ -27,7 +27,6 @@ class ResultsSetPaginationForCategory(PageNumberPagination):
 #show list of Categories
 class ShowAllCategories(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
-    authentication_classes = [TokenAuthentication,]
     queryset = Category.objects.all()    
     serializer_class = CategorySerializer
     pagination_class = ResultsSetPaginationForCategories
@@ -35,7 +34,6 @@ class ShowAllCategories(generics.ListAPIView):
 
 #show all posts about specific category
 @api_view(['GET']) 
-@authentication_classes((TokenAuthentication,))
 @permission_classes([IsAuthenticated])
 def ShowPostsCategory(request,category):
     #List all code snippets, or create a new snippet
@@ -48,7 +46,6 @@ def ShowPostsCategory(request,category):
 #show each post
 class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
-    authentication_classes = [TokenAuthentication,]
     queryset = Post.objects.all()
     serializer_class = PostDetailSerializer
     lookup_field = 'slug'
@@ -57,7 +54,6 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 #create comment
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
 @permission_classes([IsAuthenticated])
 def comment_create_view(request,slug):
     post_instance = get_object_or_404(Post,slug=slug)
@@ -71,7 +67,6 @@ def comment_create_view(request,slug):
   
 #show comments of each post
 @api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
 @permission_classes([IsAuthenticated])
 def comment_list(request,slug):
     post = Post.objects.get(slug=slug)
