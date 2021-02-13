@@ -105,7 +105,7 @@ class ValidateOTP(APIView):
 
         else:
             return Response({
-                'status' : 'False',
+                'status' : False,
                 'detail' : 'Either phone or otp was not recieved in Post request'
             })            
 
@@ -152,7 +152,7 @@ class ValidatePhoneForgot(APIView):
                     
                 else:
                     return Response({
-                                    'status': 'False', 'detail' : "OTP sending error. Please try after some time."
+                                    'status': False, 'detail' : "OTP sending error. Please try after some time."
                                 })
             else:
                 return Response({
@@ -253,7 +253,7 @@ class Register(APIView):
 
         else:
             return Response({
-                'status' : 'False',
+                'status' : False,
                 'detail' : 'Either phone or password was not recieved in Post request'
             })
 
@@ -319,7 +319,7 @@ class ForgotValidateOTP(APIView):
 
         else:
             return Response({
-                'status' : 'False',
+                'status' : False,
                 'detail' : 'Either phone or otp was not recieved in Post request'
             })            
 
