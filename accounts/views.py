@@ -56,7 +56,7 @@ class ValidatePhoneSendOTP(APIView):
                     
                 else:
                     return Response({
-                                'status': 'False', 'detail' : "OTP sending error. Please try after some time."
+                                'status': False, 'detail' : "OTP sending error. Please try after some time."
                             })
 
                 return Response({
@@ -64,7 +64,7 @@ class ValidatePhoneSendOTP(APIView):
                 })
         else:
             return Response({
-                'status': 'False', 'detail' : "I haven't received any phone number. Please do a POST request."
+                'status': False, 'detail' : "I haven't received any phone number. Please do a POST request."
             })
 
 
