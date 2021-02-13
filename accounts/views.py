@@ -170,14 +170,14 @@ def send_otp(phone):
     api_key = "artJcX_XowCxqB8mcWbjMJcTuBRRnuRn5yvhUxVlN8E="
     if phone:
         key= random.randint(999,9999)
-        '''
+        
         sms = Client(api_key)
         credit = sms.get_credit()
         bulk_id = sms.send(
-            "+9810001",          # originator
+            "50002620000528",          # originator
             [str(phone)],    # recipients
             str(key) # message
-        )'''
+        )
         return key
     else:
         return False
@@ -193,15 +193,15 @@ def send_otp_forgot(phone):
             name = user.name
         else:
             name = phone
-        '''    
+         
         sms = Client(api_key)
         credit = sms.get_credit()
         bulk_id = sms.send(
-            "+9810001",          # originator
+            "50002620000528",          # originator
             [phone],    # recipients
             otp_key # message
         )    
-        '''
+        
         return otp_key
     else:
         return False
