@@ -34,9 +34,11 @@ class ValidatePhoneSendOTP(APIView):
                     count = 0
                     old = PhoneOTP.objects.filter(phone__iexact = phone)
                     if old.exists():
-                        count = old.first().count
-                        old.first().count = count + 1
-                        old.first().save()
+                        oldd=old.first()
+                        count = oldd.count
+                        oldd.count = count + 1
+                        oldd.otp=otp
+                        oldd.save()
                     
                     else:
                         count = count + 1
@@ -77,7 +79,6 @@ class ValidateOTP(APIView):
     def post(self, request, *args, **kwargs):
         phone = request.data.get('phone', False)
         otp_sent   = request.data.get('otp', False)
-
         if phone and otp_sent:
             old = PhoneOTP.objects.filter(phone__iexact = phone)
             if old.exists():
