@@ -27,16 +27,27 @@ class ValidatePhoneSendOTP(APIView):
                 return Response({'status': False, 'detail': 'Phone Number already exists'})
                  # logic to send the otp and store the phone number and that otp in table. 
             else:
-                otp = send_otp(phone)
-                print(phone, otp)
+                #otp = send_otp(phone)
+                otp=random.randint(999,9999)
+                #print(phone, otp)
                 if otp:
                     otp = str(otp)
-                    count = 0
+                    count = 1
                     old = PhoneOTP.objects.filter(phone__iexact = phone)
                     if old.exists():
-                        count = old.first().count
-                        old.first().count = count + 1
-                        old.first().save()
+                        oldd=old.first()
+                        count = oldd.count
+                        oldd.count = count + 1
+                        print(count)
+                        if count > 7:
+                            return Response({
+                                'status' : False, 
+                                'detail' : 'Maximum otp limits reached. Kindly support our customer care or try with different number'
+                            })
+                        else:
+                            oldd.otp=otp
+                            oldd.save()
+                            send_otp(phone,otp)
                     
                     else:
                         count = count + 1
@@ -47,12 +58,7 @@ class ValidatePhoneSendOTP(APIView):
                              count = count
         
                              )
-                    if count > 7:
-                        return Response({
-                            'status' : False, 
-                             'detail' : 'Maximum otp limits reached. Kindly support our customer care or try with different number'
-                        })
-                    
+                        send_otp(phone,otp) 
                     
                 else:
                     return Response({
@@ -119,11 +125,12 @@ class ValidatePhoneForgot(APIView):
             phone = str(phone_number)
             user = User.objects.filter(phone__iexact = phone)
             if user.exists():
-                otp = send_otp_forgot(phone)
+                #otp = send_otp_forgot(phone)
+                otp =random.randint(999,9999)
                 print(phone, otp)
                 if otp:
                     otp = str(otp)
-                    count = 0
+                    count = 1
                     old = PhoneOTP.objects.filter(phone__iexact = phone)
                     if old.exists():
                         old = old.first()
@@ -135,7 +142,7 @@ class ValidatePhoneForgot(APIView):
                             })
                         old.count = k + 1
                         old.save()
-
+                        send_otp_forgot(phone,otp)
                         return Response({'status': True, 'detail': 'OTP has been sent for password reset. Limits about to reach.'})
                     
                     else:
@@ -145,9 +152,9 @@ class ValidatePhoneForgot(APIView):
                              phone =  phone, 
                              otp =   otp,
                              count = count,
-                             forgot = True, 
-        
+                             forgot = True,         
                              )
+                        send_otp_forgot(phone,otp)     
                         return Response({'status': True, 'detail': 'OTP has been sent for password reset'})
                     
                 else:
@@ -161,7 +168,7 @@ class ValidatePhoneForgot(APIView):
                 })
 
 
-def send_otp(phone):
+def send_otp(phone,key):
     """
     This is an helper function to send otp to session stored phones or 
     passed phone number as argument.
@@ -169,8 +176,6 @@ def send_otp(phone):
     # you api key that generated from panel
     api_key = "artJcX_XowCxqB8mcWbjMJcTuBRRnuRn5yvhUxVlN8E="
     if phone:
-        key= random.randint(999,9999)
-        
         sms = Client(api_key)
         credit = sms.get_credit()
         bulk_id = sms.send(
@@ -182,10 +187,9 @@ def send_otp(phone):
     else:
         return False
 
-def send_otp_forgot(phone):
+def send_otp_forgot(phone,key):
     api_key = "artJcX_XowCxqB8mcWbjMJcTuBRRnuRn5yvhUxVlN8E="
     if phone:
-        key = random.randint(999,9999)
         phone = str(phone)
         otp_key = str(key)
         user = get_object_or_404(User, phone__iexact = phone)
@@ -193,7 +197,7 @@ def send_otp_forgot(phone):
             name = user.name
         else:
             name = phone
-         
+        
         sms = Client(api_key)
         credit = sms.get_credit()
         bulk_id = sms.send(

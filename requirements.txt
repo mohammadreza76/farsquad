@@ -7,3 +7,5 @@ cffi==1.14.5
 cryptography==3.4.4 
 django-rest-knox==4.1.0 
 pycparser==2.20
+npm==0.1.1 
+optional-django==0.1.0
