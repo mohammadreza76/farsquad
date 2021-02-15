@@ -7,5 +7,9 @@ cffi==1.14.5
 cryptography==3.4.4 
 django-rest-knox==4.1.0 
 pycparser==2.20
+<<<<<<< HEAD
 npm==0.1.1 
 optional-django==0.1.0
+=======
+ippanel==1.1.0
+>>>>>>> 0d7080d8f59b30f529e6f54a14b6c6d03e4d685d

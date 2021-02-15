@@ -83,7 +83,6 @@ class ValidateOTP(APIView):
     def post(self, request, *args, **kwargs):
         phone = request.data.get('phone', False)
         otp_sent   = request.data.get('otp', False)
-
         if phone and otp_sent:
             old = PhoneOTP.objects.filter(phone__iexact = phone)
             if old.exists():
@@ -127,7 +126,7 @@ class ValidatePhoneForgot(APIView):
             if user.exists():
                 #otp = send_otp_forgot(phone)
                 otp =random.randint(999,9999)
-                print(phone, otp)
+                #print(phone, otp)
                 if otp:
                     otp = str(otp)
                     count = 1
