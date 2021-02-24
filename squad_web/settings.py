@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+from socket import gethostbyname
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,8 +26,13 @@ SECRET_KEY = '8ppyt1^_=bz=kpdrag(6=zq(ri&y)9tbf39ycev5_mm5iuhmsq'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['0.0.0.0','localhost']
+try:
+    frontAddr=gethostbyname('front')
+    ALLOWED_HOSTS+=[frontAddr]
+    print(ALLOWED_HOSTS)
+except:
+    print('I was not able to find \'front\' service IP!')
 
 # Application definition
 
