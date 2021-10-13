@@ -1,24 +1,41 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
+from accounts.models import Profile,User #phase2
 User = get_user_model()
+
+class ProfileSerializer(serializers.ModelSerializer):
+    'new_phase2'
+    'add slug in fields' 'phase2.1'
+    class Meta:
+        model = Profile
+        fields = ( 'email','phone','gender', 'date_of_birth','image','major','education_degree','slug','name',) 
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
+    #add name in fields for phase2
     class Meta:
         model = User
-        fields = ('phone', 'password')
+        fields = ('phone', 'password','name',)
         extra_kwargs = {'password': {'write_only': True}, }
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user
 
-
 class UserSerializer(serializers.ModelSerializer):
+    #add name,slug in fields for phase2
+    'add slug in fields' 'phase2.1'
     class Meta:
         model = User
-        fields = ('id', 'phone', 'first_login' )
+        fields = ('id', 'phone', 'first_login', 'name','slug',)#phase2.5
+
+class ScoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('mohavereh_score','squad_score','overall_score',)
+        
+
 
 class LoginUserSerializer(serializers.Serializer):
     phone = serializers.CharField()

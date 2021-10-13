@@ -15,9 +15,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('accounts/',include('accounts.urls')),
-    path('squadBlog/',include('squadBlog.urls')),
-]
+from django.conf import settings
+from django.conf.urls.static import static
+try:
+    urlpatterns = [
+        path('admin/', admin.site.urls),
+        path('accounts/',include('accounts.urls')),
+        path('squadBlog/',include('squadBlog.urls')),
+        path('mohavereh/',include('mohavereh.urls')), #phase2
+        path('project/',include('project.urls')),
+    ]
+ 
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+except:
+    urlpatterns=[]       

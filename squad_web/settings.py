@@ -12,7 +12,8 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
-from socket import gethostbyname
+import os
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,13 +27,9 @@ SECRET_KEY = '8ppyt1^_=bz=kpdrag(6=zq(ri&y)9tbf39ycev5_mm5iuhmsq'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0.0.0.0','localhost']
-try:
-    frontAddr=gethostbyname('front')
-    ALLOWED_HOSTS+=[frontAddr]
-    print(ALLOWED_HOSTS)
-except:
-    print('I was not able to find \'front\' service IP!')
+
+ALLOWED_HOSTS = ['0.0.0.0','localhost','127.0.0.1']
+
 
 # Application definition
 
@@ -49,7 +46,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'knox',
     'ippanel',
-    
+    'mohavereh', #phase2   
+    'project',#phase3.0     
 ]
 
 MIDDLEWARE = [
@@ -87,11 +85,14 @@ WSGI_APPLICATION = 'squad_web.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'squadDb',
+        'USER': 'squadDbAdmin',
+        'PASSWORD': 'squadDbAdmin',
+        'HOST': os.environ.get('DB_HOST'),
+        'PORT': '5432',
     }
-}
-
+} 
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -117,7 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tehran'
 
 USE_I18N = True
 
@@ -140,3 +141,6 @@ REST_KNOX={
     'USER_SEIALIZER':'accounts.serializer.UserSerializer',
     'TOKEN_TTL':timedelta(hours=24+7),
 }
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media') #phase2
+MEDIA_URL = '/media/' #phase2

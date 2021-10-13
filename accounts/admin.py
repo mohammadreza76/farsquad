@@ -7,10 +7,10 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from .forms import UserAdminCreationForm, UserAdminChangeForm
 
-from .models import  PhoneOTP
+from .models import  PhoneOTP,Profile
 
 admin.site.register(PhoneOTP)
-
+admin.site.register(Profile) 
 class UserAdmin(BaseUserAdmin):
     # The forms to add and change user instances
     form = UserAdminChangeForm
@@ -22,7 +22,7 @@ class UserAdmin(BaseUserAdmin):
     list_display = ('name', 'phone',  'admin',)
     list_filter = ('staff','active' ,'admin', )
     fieldsets = (
-        (None, {'fields': ('phone', 'password')}),
+        (None, {'fields': ('phone', 'password',)}),
         ('Personal info', {'fields': ('name',)}),
         ('Permissions', {'fields': ('admin','staff','active')}),
     )

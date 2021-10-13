@@ -1,17 +1,19 @@
 from rest_framework import permissions, generics, status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,permission_classes#phase2.5
 from django.contrib.auth import login
-from knox.auth import TokenAuthentication
 from knox.views import LoginView as KnoxLoginView
-from .serializers import (CreateUserSerializer,UserSerializer, LoginUserSerializer,ForgetPasswordSerializer)                  
-from accounts.models import User, PhoneOTP
+from .serializers import (ProfileSerializer,CreateUserSerializer,UserSerializer, LoginUserSerializer,ForgetPasswordSerializer,ScoreSerializer)                 
+from accounts.models import User, PhoneOTP, Profile
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from rest_framework.views import APIView
 import random
 from ippanel import Client
-
+from rest_framework.permissions import IsAuthenticated #phase2
+from rest_framework.parsers import MultiPartParser, FormParser #phase2
+from mohavereh.models import FormalText
+from squadBlog.models import Comment
 
 class ValidatePhoneSendOTP(APIView):
     '''
@@ -24,11 +26,11 @@ class ValidatePhoneSendOTP(APIView):
             phone = str(phone_number)
             user = User.objects.filter(phone__iexact = phone)
             if user.exists():
-                return Response({'status': False, 'detail': 'Phone Number already exists'})
+                return Response({'status': status.HTTP_403_FORBIDDEN, 'detail': 'Phone Number already exists'})
                  # logic to send the otp and store the phone number and that otp in table. 
             else:
-                #otp = send_otp(phone)
-                otp=random.randint(999,9999)
+                
+                otp=random.randint(500,99999)
                 #print(phone, otp)
                 if otp:
                     otp = str(otp)
@@ -41,7 +43,7 @@ class ValidatePhoneSendOTP(APIView):
                         print(count)
                         if count > 7:
                             return Response({
-                                'status' : False, 
+                                'status' : status.HTTP_403_FORBIDDEN, 
                                 'detail' : 'Maximum otp limits reached. Kindly support our customer care or try with different number'
                             })
                         else:
@@ -62,7 +64,7 @@ class ValidatePhoneSendOTP(APIView):
                     
                 else:
                     return Response({
-                                'status': False, 'detail' : "OTP sending error. Please try after some time."
+                                'status': status.HTTP_503_SERVICE_UNAVAILABLE, 'detail' : "OTP sending error. Please try after some time."
                             })
 
                 return Response({
@@ -70,7 +72,7 @@ class ValidatePhoneSendOTP(APIView):
                 })
         else:
             return Response({
-                'status': False, 'detail' : "I haven't received any phone number. Please do a POST request."
+                'status': status.HTTP_400_BAD_REQUEST, 'detail' : "I haven't received any phone number. Please do a POST request."
             })
 
 
@@ -98,19 +100,19 @@ class ValidateOTP(APIView):
                     })
                 else:
                     return Response({
-                        'status' : False, 
+                        'status' : status.HTTP_404_NOT_FOUND, 
                         'detail' : 'OTP incorrect, please try again'
                     })
             else:
                 return Response({
-                    'status' : False,
+                    'status' : status.HTTP_404_NOT_FOUND,
                     'detail' : 'Phone not recognised. Kindly request a new otp with this number'
                 })
 
 
         else:
             return Response({
-                'status' : False,
+                'status' : status.HTTP_400_BAD_REQUEST,
                 'detail' : 'Either phone or otp was not recieved in Post request'
             })            
 
@@ -124,8 +126,7 @@ class ValidatePhoneForgot(APIView):
             phone = str(phone_number)
             user = User.objects.filter(phone__iexact = phone)
             if user.exists():
-                #otp = send_otp_forgot(phone)
-                otp =random.randint(999,9999)
+                otp =random.randint(500,99999)
                 #print(phone, otp)
                 if otp:
                     otp = str(otp)
@@ -136,7 +137,7 @@ class ValidatePhoneForgot(APIView):
                         k = old.count
                         if k > 10:
                             return Response({
-                                'status' : False, 
+                                'status' : status.HTTP_403_FORBIDDEN, 
                                 'detail' : 'Maximum otp limits reached. Kindly support our customer care or try with different number'
                             })
                         old.count = k + 1
@@ -158,11 +159,11 @@ class ValidatePhoneForgot(APIView):
                     
                 else:
                     return Response({
-                                    'status': False, 'detail' : "OTP sending error. Please try after some time."
+                                    'status': status.HTTP_503_SERVICE_UNAVAILABLE, 'detail' : "OTP sending error. Please try after some time."
                                 })
             else:
                 return Response({
-                    'status' : False,
+                    'status' : status.HTTP_400_BAD_REQUEST,
                     'detail' : 'Phone number not recognised. Kindly try a new account for this number'
                 })
 
@@ -172,19 +173,27 @@ def send_otp(phone,key):
     This is an helper function to send otp to session stored phones or 
     passed phone number as argument.
     """
+    
     # you api key that generated from panel
     api_key = "artJcX_XowCxqB8mcWbjMJcTuBRRnuRn5yvhUxVlN8E="
     if phone:
         sms = Client(api_key)
-        credit = sms.get_credit()
-        bulk_id = sms.send(
-            "50002620000528",          # originator
-            [str(phone)],    # recipients
-            str(key) # message
+        pattern = sms.create_pattern(r"کد احراز هویت شما در فاسکواد : %verification-code%", False)
+        pattern_values = {
+            "verification-code":str(key),
+        }
+
+        sms.send_pattern(
+            "zdtwaeyqz1",    # pattern code
+            "50002620000528",      # originator
+            phone,  # recipient
+            pattern_values,  # pattern values
         )
+
         return key
     else:
-        return False
+        return False 
+
 
 def send_otp_forgot(phone,key):
     api_key = "artJcX_XowCxqB8mcWbjMJcTuBRRnuRn5yvhUxVlN8E="
@@ -192,19 +201,23 @@ def send_otp_forgot(phone,key):
         phone = str(phone)
         otp_key = str(key)
         user = get_object_or_404(User, phone__iexact = phone)
-        if user.name:
+        if user.name: 
             name = user.name
         else:
             name = phone
-        
         sms = Client(api_key)
-        credit = sms.get_credit()
-        bulk_id = sms.send(
-            "50002620000528",          # originator
-            [phone],    # recipients
-            otp_key # message
-        )    
-        
+        sms.create_pattern(r"کد احراز هویت شما در فاسکواد : %verification-code%", False)
+        pattern_values = {
+            "verification-code":otp_key,
+        }
+
+        sms.send_pattern(
+            "zdtwaeyqz1",    # pattern code
+            "50002620000528",      # originator
+            phone,  # recipient
+            pattern_values,  # pattern values
+        )
+
         return otp_key
     else:
         return False
@@ -217,18 +230,19 @@ class Register(APIView):
     def post(self, request, *args, **kwargs):
         phone = request.data.get('phone', False)
         password = request.data.get('password', False)
+        name = request.data.get('name', False) #phase2
 
         if phone and password:
             phone = str(phone)
             user = User.objects.filter(phone__iexact = phone)
             if user.exists():
-                return Response({'status': False, 'detail': 'Phone Number already have account associated. Kindly try forgot password'})
+                return Response({'status': status.HTTP_406_NOT_ACCEPTABLE, 'detail': 'Phone Number already have account associated. Kindly try forgot password'})
             else:
                 old = PhoneOTP.objects.filter(phone__iexact = phone)
                 if old.exists():
                     old = old.first()
                     if old.logged:
-                        Temp_data = {'phone': phone, 'password': password }
+                        Temp_data = {'phone': phone, 'password': password ,'name':name} #phase2
 
                         serializer = CreateUserSerializer(data=Temp_data)
                         serializer.is_valid(raise_exception=True)
@@ -238,30 +252,45 @@ class Register(APIView):
                         old.delete()
                         return Response({
                             'status' : True, 
-                            'detail' : 'Congrts, user has been created successfully.'
+                            'detail' : 'Congrts, user has been created successfully.',
                         })
 
                     else:
                         return Response({
-                            'status': False,
+                            'status': status.HTTP_403_FORBIDDEN,
                             'detail': 'Your otp was not verified earlier. Please go back and verify otp'
 
                         })
                 else:
                     return Response({
-                    'status' : False,
+                    'status' : status.HTTP_400_BAD_REQUEST,
                     'detail' : 'Phone number not recognised. Kindly request a new otp with this number'
                 })
                     
 
         else:
             return Response({
-                'status' : False,
+                'status' : status.HTTP_400_BAD_REQUEST,
                 'detail' : 'Either phone or password was not recieved in Post request'
             })
 
 class LoginAPI(KnoxLoginView):
     permission_classes = (permissions.AllowAny,)
+    
+    def get_post_response_data(self, request, token, instance):
+        UserSerializer = self.get_user_serializer_class()
+
+        data = {
+            'expiry': self.format_expiry_datetime(instance.expiry),
+            'token': token,
+            'slug': request.user.slug #phase2.1
+        }
+        if UserSerializer is not None:
+            data["user"] = UserSerializer(
+                request.user,
+                context=self.get_serializer_context()
+            ).data
+        return data 
 
     def post(self, request, format=None):
         serializer = LoginUserSerializer(data=request.data)
@@ -276,7 +305,9 @@ class LoginAPI(KnoxLoginView):
             user.save()
             
         login(request, user)
-        return super().post(request, format=None)        
+        return super().post(request, format=None)     
+
+
 
 class ForgotValidateOTP(APIView):
     '''
@@ -294,7 +325,7 @@ class ForgotValidateOTP(APIView):
                 old = old.first()
                 if old.forgot == False:
                     return Response({
-                        'status' : False, 
+                        'status' : status.HTTP_406_NOT_ACCEPTABLE, 
                         'detail' : 'This phone havenot send valid otp for forgot password. Request a new otp or contact help centre.'
                      })
                     
@@ -309,20 +340,20 @@ class ForgotValidateOTP(APIView):
                     })
                 else:
                     return Response({
-                        'status' : False, 
+                        'status' : status.HTTP_400_BAD_REQUEST, 
                         'detail' : 'OTP incorrect, please try again'
 
                     })
             else:
                 return Response({
-                    'status' : False,
+                    'status' : status.HTTP_400_BAD_REQUEST,
                     'detail' : 'Phone not recognised. Kindly request a new otp with this number'
                 })
 
 
         else:
             return Response({
-                'status' : False,
+                'status' : status.HTTP_400_BAD_REQUEST,
                 'detail' : 'Either phone or otp was not recieved in Post request'
             })            
 
@@ -360,18 +391,51 @@ class ForgetPasswordChange(APIView):
 
                 else:
                     return Response({
-                'status' : False,
+                'status' : status.HTTP_404_NOT_FOUND,
                 'detail' : 'OTP Verification failed. Please try again in previous step'
                                  })
 
             else:
                 return Response({
-                'status' : False,
+                'status' : status.HTTP_404_NOT_FOUND,
                 'detail' : 'Phone and otp are not matching or a new phone has entered. Request a new otp in forgot password'
             })
 
         else:
             return Response({
-                'status' : False,
+                'status' : status.HTTP_400_BAD_REQUEST,
                 'detail' : 'Post request have parameters mising.'
             })
+
+class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
+    #phase 2
+    "delete and retritive and update profile"
+    'add slug in in this class' 'phase2.1'
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProfileSerializer
+    queryset = Profile.objects.all()
+    parser_classes = [MultiPartParser, FormParser]
+    lookup_field = 'slug'
+
+
+class ProfileListView(generics.ListAPIView):
+    #phase2
+    serializer_class = ProfileSerializer
+    queryset = Profile.objects.all()  
+
+#phase2.5
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def show_score(request,slug):
+    try:
+        user = get_object_or_404(User,slug=slug)
+        user.mohavereh_score = FormalText.objects.filter(owner=user).count()
+        user.squad_score = Comment.objects.filter(owner=user).count()
+        user.overall_score = user.mohavereh_score + user.squad_score
+        user.save()
+        data_show = {'mohavereh_score':user.mohavereh_score,'overall_score':user.overall_score,'squad_score':user.squad_score,}
+        serializer = ScoreSerializer(data=data_show)
+        serializer.is_valid(raise_exception = True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)  
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND)    
